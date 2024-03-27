@@ -1,10 +1,13 @@
 package com.example.demo.service;
 
 import java.util.List;
+import java.util.function.Predicate;
+
 import org.springframework.stereotype.Service;
 
 import com.example.demo.exception.ResponseException;
 import com.example.demo.model.Customer;
+import com.example.demo.model.Product;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.ProductRepository;
 
@@ -22,6 +25,14 @@ public class CustomerService {
     }
 
     public Customer createCustomer(Customer customer) {
+        final var productDbs = productRepository.findAll();
+        final Predicate<Product> checkProduct = p -> productDbs
+                .stream()
+                .anyMatch(product -> p.getId() == product.getId());
+        final var insertable = productDbs.stream().anyMatch(checkProduct);
+        if (!insertable) {
+            throw new ResponseException("Product Not Found : ");
+        }
         return customerRepository.save(customer);
     }
 

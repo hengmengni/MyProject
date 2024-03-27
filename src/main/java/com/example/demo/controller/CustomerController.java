@@ -2,13 +2,17 @@ package com.example.demo.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.CustomerResponse;
+import com.example.demo.dto.ProductResponse;
 import com.example.demo.model.Customer;
+import com.example.demo.model.Product;
 import com.example.demo.service.CustomerService;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +31,20 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping("customers")
-    public ResponseEntity<List<Customer>> getCustomer() {
-        return new ResponseEntity<>(customerService.getListCostomer(), HttpStatus.OK);
+    public ResponseEntity<List<CustomerResponse>> getCustomer() {
+        final var getCustomers = customerService.getListCostomer();
+        final var productresponse = getCustomers.stream().map(c -> new CustomerResponse(c.getId(), c.getName(),
+                c.getSex(), c.getPhone(), convertCategoryResponses(c))).collect(Collectors.toList());
+        return new ResponseEntity<>(productresponse, HttpStatus.OK);
     }
 
     @PostMapping("customers")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
-        return new ResponseEntity<>(customerService.createCustomer(customer), HttpStatus.CREATED);
+    public ResponseEntity<CustomerResponse> createCustomer(@RequestBody Customer customer) {
+        final var createCustomer = customerService.createCustomer(customer);
+        final var response = new CustomerResponse(createCustomer.getId(), createCustomer.getName(),
+                createCustomer.getSex(), createCustomer.getPhone(), convertCategoryResponses(createCustomer));
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PutMapping("customers/{id}")
@@ -49,6 +59,14 @@ public class CustomerController {
     public ResponseEntity<Object> deleteCustomer(@PathVariable Integer id) {
         customerService.deleteCustomer(id);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    List<ProductResponse> convertCategoryResponses(Customer customer) {
+        return customer
+                .getProducts()
+                .stream()
+                .map(p -> new ProductResponse(p.getId(), p.getName(), p.getPrice(), p.getQty()))
+                .collect(Collectors.toList());
     }
 
 }
