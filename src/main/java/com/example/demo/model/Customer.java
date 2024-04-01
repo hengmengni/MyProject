@@ -29,7 +29,7 @@ public class Customer {
     private String sex;
 
     @Column(name = "phone")
-    private long phone;
+    private String phone;
 
     @ManyToMany
     private List<Product> products;

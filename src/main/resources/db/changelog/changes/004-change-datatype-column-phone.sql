@@ -1,0 +1,2 @@
+ALTER TABLE public.customer
+ALTER COLUMN phone TYPE VARCHAR(15);
